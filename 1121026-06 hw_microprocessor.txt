@@ -1,0 +1,60 @@
+#include <Adafruit_LEDBackpack.h>
+Adafruit_7segment led_display1 = Adafruit_7segment();
+
+// C++ code
+//
+
+ char num_tab[]={ 0x3F,  // 0
+                  0x06,  // 1
+                  0x5B,  // 2
+                  0x4F,  // 3
+                  0x66,  // 4
+                  0x6D,  // 5
+                  0x7D,  // 6
+                  0x07,  // 7
+                  0x7F,  // 8
+                  0x6F,  // 9
+                  // 0x80,	 //	.
+                };
+                 
+int b1=3;
+int b2=2;
+
+void setup()
+{
+  led_display1.begin();
+  pinMode(A1, INPUT);
+  pinMode(b1,INPUT_PULLUP);
+  pinMode(b2,INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(b1),add,FALLING);
+  attachInterrupt(digitalPinToInterrupt(b2),reduce,FALLING);
+  
+}
+
+int c = 9997;
+
+void loop()
+{
+  /*
+  for (int i = 0; i <= 1200; i++){
+    led_display1.println(i);
+    led_display1.writeDisplay();
+    }*/
+  led_display1.writeDigitRaw(0, num_tab[c/1000]);
+  led_display1.writeDigitRaw(1, num_tab[(c%1000)/100]);
+  led_display1.writeDigitRaw(2, 4);
+  led_display1.writeDigitRaw(3, num_tab[((c%1000)%100)/10]);
+  led_display1.writeDigitRaw(4, num_tab[((c%1000)%100)%10]);
+  led_display1.writeDisplay();
+
+}
+
+void add(){
+  if(c<9999)
+    c++;
+}
+
+void reduce(){
+  if(c>=1)
+    c--;
+}
