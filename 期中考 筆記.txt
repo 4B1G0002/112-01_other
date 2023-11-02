@@ -1,0 +1,42 @@
+七段顯示器_分秒顯示：
+ led_display1.writeDigitRaw(0, num_tab[c/1000]);
+ led_display1.writeDigitRaw(1, num_tab[(c%1000)/100]);
+ led_display1.writeDigitRaw(2, 4);
+ led_display1.writeDigitRaw(3, num_tab[((c%1000)%100)/10]);
+ led_display1.writeDigitRaw(4, num_tab[((c%1000)%100)%10]);
+
+七段段顯示器代碼：
+char num_tab[]={ 0x3F,  // 0
+                  0x06,  // 1
+                  0x5B,  // 2
+                  0x4F,  // 3
+                  0x66,  // 4
+                  0x6D,  // 5
+                  0x7D,  // 6
+                  0x07,  // 7
+                  0x7F,  // 8
+                  0x6F,  // 9
+
+指定程式區段：
+attachInterrupt(digitalPinToInterrupt(b1),add,FALLING);
+
+PWM 控制 LED：
+void setup()
+{
+  pinMode(3, OUTPUT);
+}
+
+void loop()
+{
+  for(int i=0;i<255;i+=20){
+    analogWrite(3,i);
+    delay(500);
+  }
+}
+
+啟用內置電阻：
+ pinMode(b2, INPUT_PULLUP)
+
+啟用序列：
+Serial.begin(9600);
+Serial,print("Counter=");
