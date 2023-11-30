@@ -1,0 +1,302 @@
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
+
+#define USE_SERIAL Serial
+#define WIFI_SSID "Wokwi-GUEST"
+#define WIFI_PASSWORD ""
+#define WIFI_CHANNEL 6
+
+int R1=17;
+int G1=18;
+int BA=19;
+int R2=2;
+int G2=0;
+int B2=4;
+int R3=25;
+int G3=26;
+int B3=27;
+void setup() {
+
+    USE_SERIAL.begin(115200);
+    pinMode(R1, OUTPUT);
+    pinMode(G1, OUTPUT);
+    pinMode(BA, OUTPUT);
+    pinMode(R2, OUTPUT);
+    pinMode(G2, OUTPUT);
+    pinMode(B2, OUTPUT);
+    pinMode(R3, OUTPUT);
+    pinMode(G3, OUTPUT);
+    pinMode(B3, OUTPUT);
+    analogWrite(R1, 0);
+    analogWrite(G1, 0);
+    analogWrite(BA, 0);
+    analogWrite(R2, 0);
+    analogWrite(G2, 0);
+    analogWrite(B2, 0);
+    analogWrite(R3, 0);
+    analogWrite(G3, 0);
+    analogWrite(B3, 0);
+    USE_SERIAL.println();
+    USE_SERIAL.println();
+    USE_SERIAL.println();
+
+    for(uint8_t t = 4; t > 0; t--) {
+        USE_SERIAL.printf("[SETUP] WAIT %d...\n", t);
+        USE_SERIAL.flush();
+        delay(1000);
+    }
+
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WIFI_CHANNEL);
+    Serial.print("Connecting to WiFi ");
+    Serial.print(WIFI_SSID);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(100);
+      Serial.print(".");
+    }
+    Serial.println(" Connected!");
+
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+
+}
+
+void loop() {
+    if((WiFi.status() == WL_CONNECTED)) {
+
+        HTTPClient http;
+
+        USE_SERIAL.print("[HTTP] begin...\n");
+        http.begin("https://data.moenv.gov.tw/api/v2/aqx_p_02?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=datacreationdate%20desc&format=JSON"); //HTTP
+
+        USE_SERIAL.print("[HTTP] GET...\n");
+        int httpCode = http.GET();
+
+        if(httpCode > 0) {
+            USE_SERIAL.printf("[HTTP] GET... code: %d\n", httpCode);
+
+            if(httpCode == HTTP_CODE_OK) {
+                String payload = http.getString();
+
+        DynamicJsonDocument doc(12288);
+
+        DeserializationError error = deserializeJson(doc, payload);
+
+        if (error) {
+          Serial.print("deserializeJson() failed: ");
+          Serial.println(error.c_str());
+          return;
+        }
+
+        for (JsonObject field : doc["fields"].as<JsonArray>()) {
+
+          const char* field_id = field["id"]; // "site", "county", "pm25", "datacreationdate", "itemunit"
+          const char* field_type = field["type"]; // "text", "text", "text", "text", "text"
+
+          const char* field_info_label = field["info"]["label"]; // "測站名稱", "縣市名稱", "細懸浮微粒濃度", "資料建置日期", "測項單位"
+
+        }
+
+        const char* resource_id = doc["resource_id"]; // "c1f31192-babd-4105-b880-a4c2e23a3276"
+
+        const char* extras_api_key = doc["__extras"]["api_key"]; // "e8dd42e6-9b8b-43f8-991e-b3dee723a52d"
+
+        bool include_total = doc["include_total"]; // true
+        const char* total = doc["total"]; // "78"
+        const char* resource_format = doc["resource_format"]; // "object"
+        const char* limit = doc["limit"]; // "1000"
+        const char* offset = doc["offset"]; // "0"
+
+        const char* links_start = doc["_links"]["start"];
+        const char* links_next = doc["_links"]["next"];
+
+        for (JsonObject record : doc["records"].as<JsonArray>()) {
+
+          const char* record_site = record["site"]; // "大城", "富貴角", "麥寮", "關山", "馬公", "金門", "馬祖", "埔里", "復興", ...
+          const char* record_county = record["county"]; // "彰化縣", "新北市", "雲林縣", "臺東縣", "澎湖縣", "金門縣", "連江縣", "南投縣", ...
+          const char* record_pm25 = record["pm25"]; // "13", nullptr, "11", "0", "9", "34", "22", "9", "36", "12", ...
+          const char* record_datacreationdate = record["datacreationdate"]; // "2023-11-27 12:00", "2023-11-27 ...
+          const char* record_itemunit = record["itemunit"]; // "μg/m3", "μg/m3", "μg/m3", "μg/m3", "μg/m3", ...
+          if (record["site"]=="臺南")
+          {
+            String s1 =record["site"];
+            Serial.print(s1);
+            String pa=record["pm25"];
+            int p1 = pa.toInt();
+            if (p1>=0 && p1<=15.4)
+            {
+            analogWrite(R1, 0);
+            analogWrite(G1, 255);
+            analogWrite(BA, 0);
+            }
+            else if (p1>=15.5 && p1<=35.4)
+            {
+            analogWrite(R1, 255);
+            analogWrite(G1, 255);
+            analogWrite(BA, 0);
+            }
+            else if (p1>=35.5 && p1<=54.4)
+            {
+            analogWrite(R1, 255);
+            analogWrite(G1, 150);
+            analogWrite(BA, 0);
+            }
+            else if (p1>=54.5 && p1<=150.4)
+            {
+            analogWrite(R1, 255);
+            analogWrite(G1, 0);
+            analogWrite(BA, 0);
+            }
+            else if (p1>=150.5 && p1<=250.4)
+            {
+            analogWrite(R1, 128);
+            analogWrite(G1, 0);
+            analogWrite(BA, 128);
+            }
+            else if (p1>=250.5 && p1<=350.4)
+            {
+            analogWrite(R1, 139);
+            analogWrite(G1, 0);
+            analogWrite(BA, 0);
+            }
+            else if (p1>=350.5 && p1<=500.4)
+            {
+            analogWrite(R1, 139);
+            analogWrite(G1, 0);
+            analogWrite(BA, 0);
+            }
+            Serial.print("PM2.5=");
+            Serial.print(pa);
+            String u1 = record["itemunit"];
+            Serial.print(u1);
+            Serial.print(",時間");
+            String t1=record["datacreationdate"];
+            Serial.println(t1);
+          }
+          if (record["site"]=="金門")
+          {
+            String s2 =record["site"];
+            Serial.print(s2);
+            String pb=record["pm25"];
+            int p2 = pb.toInt();
+            if (p2>=0 && p2<=15.4)
+            {
+            analogWrite(R2, 0);
+            analogWrite(G2, 255);
+            analogWrite(B2, 0);
+            }
+            else if (p2>=15.5 && p2<=35.4)
+            {
+            analogWrite(R2, 255);
+            analogWrite(G2, 255);
+            analogWrite(B2, 0);
+            }
+            else if (p2>=35.5 && p2<=54.4)
+            {
+            analogWrite(R2, 200);
+            analogWrite(G2, 150);
+            analogWrite(B2, 0);
+            }
+            else if (p2>=54.5 && p2<=150.4)
+            {
+            analogWrite(R2, 255);
+            analogWrite(G2, 0);
+            analogWrite(B2, 0);
+            }
+            else if (p2>=150.5 && p2<=250.4)
+            {
+            analogWrite(R2, 128);
+            analogWrite(G2, 0);
+            analogWrite(B2, 128);
+            }
+            else if (p2>=250.5 && p2<=350.4)
+            {
+            analogWrite(R2, 139);
+            analogWrite(G2, 0);
+            analogWrite(B2, 0);
+            }
+            else if (p2>=350.5 && p2<=500.4)
+            {
+            analogWrite(R2, 139);
+            analogWrite(G2, 0);
+            analogWrite(B2, 0);
+            }
+            Serial.print("PM2.5=");
+            Serial.print(pb);
+            String u2 = record["itemunit"];
+            Serial.print(u2);
+            Serial.print(",時間");
+            String t2=record["datacreationdate"];
+            Serial.println(t2);
+          }
+          if (record["site"]=="馬祖")
+          {
+            String s3 =record["site"];
+            Serial.print(s3);
+            String pc=record["pm25"];
+            int p3 = pc.toInt();
+            if (p3>=0 && p3<=15.4)
+            {
+            analogWrite(R3, 0);
+            analogWrite(G3, 255);
+            analogWrite(B3, 0);
+            }
+            else if (p3>=15.5 && p3<=35.4)
+            {
+            analogWrite(R3, 255);
+            analogWrite(G3, 255);
+            analogWrite(B3, 0);
+            }
+            else if (p3>=35.5 && p3<=54.4)
+            {
+            analogWrite(R3, 255);
+            analogWrite(G3, 150);
+            analogWrite(B3, 0);
+            }
+            else if (p3>=54.5 && p3<=150.4)
+            {
+            analogWrite(R3, 255);
+            analogWrite(G3, 0);
+            analogWrite(B3, 0);
+            }
+            else if (p3>=150.5 && p3<=250.4)
+            {
+            analogWrite(R3, 128);
+            analogWrite(G3, 0);
+            analogWrite(B3, 128);
+            }
+            else if (p3>=250.5 && p3<=350.4)
+            {
+            analogWrite(R3, 139);
+            analogWrite(G3, 0);
+            analogWrite(B3, 0);
+            }
+            else if (p3>=350.5 && p3<=500.4)
+            {
+            analogWrite(R3, 139);
+            analogWrite(G3, 0);
+            analogWrite(B3, 0);
+            }
+            Serial.print("PM2.5=");
+            Serial.print(pc);
+            String u3 = record["itemunit"];
+            Serial.print(u3);
+            Serial.print(",時間");
+            String t3=record["datacreationdate"];
+            Serial.println(t3);
+          }
+        }
+
+            }
+        } else {
+            USE_SERIAL.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        }
+
+        http.end();
+    }
+
+    delay(5000);
+}
