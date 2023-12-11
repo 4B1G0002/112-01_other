@@ -1,10 +1,5 @@
-//112-01 微處理機應用實習 期末專案 4B1G0002 馮士釗
-//A1121206_109_DHT11_water_sw420_RYGLED_LCD_wifi_thingspeak
-//1121207 基本功能全部完成，網頁可以顯示 溫度、濕度、水位、震動
-//108增加網頁顯示水位高、中、普通
-//109增加網頁時間顯示
-//112-01 微處理機應用實習 期末專案 4B1G0002 馮士釗
-//A1121206_109_DHT11_water_sw420_RYGLED_LCD_wifi_thingspeak
+//錯誤程式碼
+//error404
 #include <LiquidCrystal_I2C.h>  //I2C LCD
 #include "DHTesp.h"
 #include "ThingSpeak.h"
@@ -284,3 +279,10 @@ void ThingS() {
   number4 = random(0, 100);
 }
 
+//112-01 微處理機應用實習 期末專案 4B1G0002 馮士釗
+//A1121206_109a_DHT11_water_sw420_RYGLED_LCD_wifi_thingspeak
+//1121207 基本功能全部完成，網頁可以顯示 溫度、濕度、水位、震動
+//108增加網頁顯示水位高、中、普通
+//109增加網頁時間顯示
+//112-01 微處理機應用實習 期末專案 4B1G0002 馮士釗
+//A1121206_109a_DHT11_water_sw420_RYGLED_LCD_wifi_thingspeak
